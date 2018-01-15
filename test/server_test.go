@@ -23,12 +23,16 @@ func Test_Listen(t *testing.T) {
 	t.Log("server start", time.Now())
 
 	iPort, _ := strconv.Atoi(port)
-	s.Listen(iPort)
+	srv := s.Listen(iPort)
+	
+	defer srv.Close()
 
 	res, err := http.Get("http://localhost:" + port)
 	if err != nil {
 		t.Error(err)
 	}
+
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		t.Error(res)
