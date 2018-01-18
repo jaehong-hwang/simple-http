@@ -5,18 +5,37 @@ import (
 	"strconv"
 )
 
-type Server struct{}
+type Server struct {
+	routes []Route
+}
 
-func (s *Server) Listen(port int) (*http.Server) {
-	srv := &http.Server{Addr: ":" + strconv.Itoa(port)}
-
-	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		res.Write([]byte("Success"))
+func (s *Server) AddRoute(method string, pattern string, action RouteAction) {
+	s.routes = append(s.routes, Route{
+		method: method,
+		pattern: pattern,
+		Action: action,
 	})
+}
 
-	go func() {
-		srv.ListenAndServe()
-	}()
+func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	notFound := true
+	for _, route := range s.routes {
+		if route.Match(req.Method, req.URL.Path) {
+			res.Write(route.Action(req))
+			notFound = false
+		}
+	}
+
+	if notFound == true {
+		res.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func (s *Server) Listen(port int) (*http.ServeMux) {
+	srv := http.NewServeMux()
+	srv.HandleFunc("/", s.ServeHTTP)
+
+	http.ListenAndServe(":"+strconv.Itoa(port), srv)
 
 	return srv
 }

@@ -11,22 +11,21 @@ import (
 )
 
 var port string
+var s simpleHttp.Server
 
 func init() {
 	flag.StringVar(&port, "port", "0", "server port")
 }
 
-func Test_Listen(t *testing.T) {
+func TestListen(t *testing.T) {
 	t.Log(port)
 
-	s := simpleHttp.Server{}
+	s = simpleHttp.Server{}
 
 	t.Log("server start", time.Now())
 
 	iPort, _ := strconv.Atoi(port)
-	srv := s.Listen(iPort)
-
-	defer srv.Close()
+	go s.Listen(iPort)
 
 	res, err := http.Get("http://localhost:" + port)
 	if err != nil {
@@ -40,9 +39,27 @@ func Test_Listen(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	t.Log("response code: ", res.StatusCode)
 	t.Log("response body: ", string(data))
+}
 
-	if res.StatusCode != http.StatusOK {
-		t.Error(res)
+func TestRoute(t *testing.T) {
+	s.AddRoute(http.MethodGet, "/test", func(request *http.Request) []byte {
+		return []byte("test")
+	})
+
+	res, err := http.Get("http://localhost:" + port + "/test")
+	if err != nil {
+		t.Fatal(err)
 	}
+
+	defer res.Body.Close()
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log("response code: ", res.StatusCode)
+	t.Log("response body: ", string(data))
 }
