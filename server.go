@@ -5,15 +5,37 @@ import (
 	"strconv"
 )
 
+// Server struct
 type Server struct {
 	routes []Route
 }
 
+// Get method route append to server
+func (s *Server) Get(pattern string, action RouteAction) {
+	s.AddRoute(http.MethodGet, pattern, action)
+}
+
+// Post method route append to server
+func (s *Server) Post(pattern string, action RouteAction) {
+	s.AddRoute(http.MethodPost, pattern, action)
+}
+
+// Put method route append to server
+func (s *Server) Put(pattern string, action RouteAction) {
+	s.AddRoute(http.MethodPut, pattern, action)
+}
+
+// Delete method route append to server
+func (s *Server) Delete(pattern string, action RouteAction) {
+	s.AddRoute(http.MethodDelete, pattern, action)
+}
+
+// AddRoute to server
 func (s *Server) AddRoute(method string, pattern string, action RouteAction) {
 	s.routes = append(s.routes, Route{
-		method: method,
+		method:  method,
 		pattern: pattern,
-		Action: action,
+		Action:  action,
 	})
 }
 
@@ -31,7 +53,8 @@ func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *Server) Listen(port int) (*http.ServeMux) {
+// Listen start
+func (s *Server) Listen(port int) *http.ServeMux {
 	srv := http.NewServeMux()
 	srv.HandleFunc("/", s.ServeHTTP)
 
