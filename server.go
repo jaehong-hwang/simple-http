@@ -3,16 +3,18 @@ package http
 import (
 	"net/http"
 	"strconv"
+
+	"github.com/jaehong-hwang/simple-http/router"
 )
 
 // Server struct
 type Server struct {
 	Test   bool
-	Routes Routes
+	Router router.RouteContainer
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	route, notFound := s.Routes.Match(req.Method, req.URL.Path)
+	route, notFound := s.Router.Match(req.Method, req.URL.Path)
 
 	if notFound == true {
 		w.WriteHeader(http.StatusNotFound)

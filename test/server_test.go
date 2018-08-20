@@ -62,7 +62,7 @@ func TestListen(t *testing.T) {
 }
 
 func TestRoute(t *testing.T) {
-	s.Routes.AddRoute(http.MethodGet, "/test/AddRoute", func(req *http.Request) (string, error) {
+	s.Router.AddRoute(http.MethodGet, "/test/AddRoute", func(req *http.Request) (string, error) {
 		return "test", nil
 	})
 
@@ -72,19 +72,19 @@ func TestRoute(t *testing.T) {
 func TestSimpleRoute(t *testing.T) {
 	path := "/test/SimpleRoute"
 
-	s.Routes.Get(path, func(req *http.Request) (string, error) {
+	s.Router.Get(path, func(req *http.Request) (string, error) {
 		return "get", nil
 	})
 
-	s.Routes.Post(path, func(req *http.Request) (string, error) {
+	s.Router.Post(path, func(req *http.Request) (string, error) {
 		return "post", nil
 	})
 
-	s.Routes.Put(path, func(req *http.Request) (string, error) {
+	s.Router.Put(path, func(req *http.Request) (string, error) {
 		return "put", nil
 	})
 
-	s.Routes.Delete(path, func(req *http.Request) (string, error) {
+	s.Router.Delete(path, func(req *http.Request) (string, error) {
 		return "Delete", nil
 	})
 
@@ -96,7 +96,7 @@ func TestSimpleRoute(t *testing.T) {
 
 func TestServerError(t *testing.T) {
 	path := "/test/serverError"
-	s.Routes.Get(path, func(req *http.Request) (string, error) {
+	s.Router.Get(path, func(req *http.Request) (string, error) {
 		return "auth error!", shttp.ServerError{Status: 401}
 	})
 
