@@ -39,17 +39,28 @@ func (s *Server) AddRoute(method string, pattern string, action RouteAction) {
 	})
 }
 
-func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	notFound := true
 	for _, route := range s.routes {
 		if route.Match(req.Method, req.URL.Path) {
-			res.Write(route.Action(req))
+			contents, err := route.Action(req)
+
+			if err != nil {
+				if serverErr, ok := err.(ServerError); ok {
+					w.WriteHeader(serverErr.Status)
+				} else {
+					w.WriteHeader(http.StatusInternalServerError)
+				}
+			}
+
+			w.Write([]byte(contents))
+
 			notFound = false
 		}
 	}
 
 	if notFound == true {
-		res.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 

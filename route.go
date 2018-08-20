@@ -1,9 +1,11 @@
 package http
 
-import "net/http"
+import (
+	"net/http"
+)
 
 // RouteAction func
-type RouteAction func(*http.Request) []byte
+type RouteAction func(*http.Request) (string, error)
 
 // Route struct
 type Route struct {
