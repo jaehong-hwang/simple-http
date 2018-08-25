@@ -9,7 +9,6 @@ import (
 
 // Server struct
 type Server struct {
-	Test   bool
 	Router router.RouteContainer
 	Env    ServerEnv
 }

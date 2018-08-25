@@ -6,5 +6,6 @@ import shttp "github.com/jaehong-hwang/simple-http"
 func GetEnv() shttp.ServerEnv {
 	return shttp.ServerEnv{
 		Port: 7857,
+		Test: true,
 	}
 }
