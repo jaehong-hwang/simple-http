@@ -11,6 +11,7 @@ import (
 type Server struct {
 	Test   bool
 	Router router.RouteContainer
+	Env    ServerEnv
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -35,11 +36,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Listen start
-func (s *Server) Listen(port int) *http.ServeMux {
+func (s *Server) Listen() *http.ServeMux {
 	srv := http.NewServeMux()
 	srv.HandleFunc("/", s.ServeHTTP)
 
-	http.ListenAndServe(":"+strconv.Itoa(port), srv)
+	http.ListenAndServe(":"+strconv.Itoa(s.Env.Port), srv)
 
 	return srv
 }

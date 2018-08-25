@@ -1,7 +1,6 @@
 package test
 
 import (
-	"flag"
 	"io/ioutil"
 	http "net/http"
 	"strconv"
@@ -18,14 +17,13 @@ var port string
 var s shttp.Server
 
 func init() {
-	flag.StringVar(&port, "port", "8080", "server port")
-	url = "http://localhost:" + port
+	env := GetEnv()
+	s = shttp.Server{Env: env}
 
-	s = shttp.Server{}
+	url = "http://localhost:" + strconv.Itoa(env.Port)
 	client = &http.Client{}
 
-	iPort, _ := strconv.Atoi(port)
-	go s.Listen(iPort)
+	go s.Listen()
 }
 
 func req(method string, url string, t *testing.T) {
