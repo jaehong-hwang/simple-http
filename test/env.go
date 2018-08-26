@@ -3,6 +3,7 @@ package test
 import (
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	shttp "github.com/jaehong-hwang/simple-http"
 	sdb "github.com/jaehong-hwang/simple-http/database"
 )
