@@ -4,17 +4,11 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	sdb "github.com/jaehong-hwang/simple-http/database"
 )
-
-func connect(env sdb.Env) (sdb.Pool, error) {
-	db, err := sdb.NewPool(env, 10, 10)
-	return db, err
-}
 
 func TestConnection(t *testing.T) {
 	env := GetDatabaseEnv()
-	db, err := connect(env)
+	db, err := GetDBConnect(env)
 	if err != nil {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}
@@ -31,7 +25,7 @@ type testStruct struct {
 
 func TestQuery(t *testing.T) {
 	env := GetDatabaseEnv()
-	db, err := connect(env)
+	db, err := GetDBConnect(env)
 	if err != nil {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}

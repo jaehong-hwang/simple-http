@@ -49,3 +49,8 @@ func (p *Pool) Open() error {
 func (p *Pool) Close() error {
 	return p.SQLDB.Close()
 }
+
+// Query start
+func (p *Pool) Query() *Query {
+	return &Query{connection: p}
+}

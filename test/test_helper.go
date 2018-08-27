@@ -7,6 +7,12 @@ import (
 	sdb "github.com/jaehong-hwang/simple-http/database"
 )
 
+// GetDBConnect func
+func GetDBConnect(env sdb.Env) (sdb.Pool, error) {
+	db, err := sdb.NewPool(env, 10, 10)
+	return db, err
+}
+
 // GetServerEnv func
 func GetServerEnv() shttp.ServerEnv {
 	return shttp.ServerEnv{
