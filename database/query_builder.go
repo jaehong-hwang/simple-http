@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"strings"
+
+	"github.com/jaehong-hwang/simple-http/database/command"
 )
 
 // Query struct
@@ -10,7 +12,7 @@ type Query struct {
 	connection *Pool
 	table      string
 	selectors  []string
-	where      []map[string]interface{}
+	where      command.Where
 }
 
 // From table setting
@@ -30,7 +32,7 @@ func (q *Query) Select(args ...string) *Query {
 
 // Where append to model
 func (q *Query) Where(query string, values ...interface{}) *Query {
-	q.where = append(q.where, map[string]interface{}{"query": query, "args": values})
+	q.where.And(query, values...)
 
 	return q
 }
@@ -41,13 +43,28 @@ func (q *Query) Where(query string, values ...interface{}) *Query {
 // Get rows by
 // select query execute
 func (q *Query) Get() (*sql.Rows, error) {
+	var args []interface{}
 	if len(q.selectors) < 1 {
 		q.selectors = append(q.selectors, "*")
 	}
 
-	querystr := "SELECT `" + strings.Join(q.selectors, "`, `") + "` FROM `" + q.table + "`" + q.where
+	where, whereArgs := q.where.ToCommand()
 
-	return q.connection.SQLDB.Query(querystr)
+	args = append(args, whereArgs...)
+
+	querystr := "SELECT `" + strings.Join(q.selectors, "`, `") + "` FROM `" + q.table + "` " + where
+
+	rows, err := q.connection.SQLDB.Query(querystr, args...)
+	if err != nil {
+		return nil,
+			QueryError{
+				QueryString: querystr,
+				Parameters:  args,
+				Message:     err.Error(),
+			}
+	}
+
+	return rows, nil
 }
 
 // Insert to table
