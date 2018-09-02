@@ -61,12 +61,7 @@ func (q *Query) Query(query string, args []interface{}) (*QueryResult, error) {
 	}
 
 	if err != nil {
-		return result,
-			QueryError{
-				QueryString: query,
-				Parameters:  args,
-				Message:     err.Error(),
-			}
+		return result, err
 	}
 
 	return result, nil

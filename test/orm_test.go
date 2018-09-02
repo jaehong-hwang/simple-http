@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/jaehong-hwang/simple-http/database"
 )
 
 func TestORMGet(t *testing.T) {
@@ -28,12 +27,8 @@ func TestORMGet(t *testing.T) {
 	t.Log("query parameters: ", result.Parameters)
 	t.Log("query execution time: ", result.Duration)
 
-	if _, ok := err.(database.QueryError); ok {
-		t.Fatalf("query error: %s", err.Error())
-	}
-
 	if err != nil {
-		t.Fatalf("error: %s", err.Error())
+		t.Fatalf("query error: %s", err.Error())
 	}
 
 	t.Log("==================================")
