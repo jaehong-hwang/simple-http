@@ -17,27 +17,31 @@ func TestORMGet(t *testing.T) {
 	db.Open()
 	defer db.Close()
 
-	rows, err := db.Query().
+	result, err := db.Query().
 		From("orm_test").
 		Select("id", "f1", "f2").
 		Where("id = ?", 1).
 		OrWhere("id = ?", 2).
 		Get()
 
-	if errQ, ok := err.(database.QueryError); ok {
-		t.Logf("query error: %s", err.Error())
-		t.Logf("query string: \"%s\"", errQ.QueryString)
-		t.Fatal("query parameters: ", errQ.Parameters)
+	t.Logf("query string: \"%s\"", result.QueryString)
+	t.Log("query parameters: ", result.Parameters)
+	t.Log("query execution time: ", result.Duration)
+
+	if _, ok := err.(database.QueryError); ok {
+		t.Fatalf("query error: %s", err.Error())
 	}
 
 	if err != nil {
 		t.Fatalf("error: %s", err.Error())
 	}
 
+	t.Log("==================================")
+
 	var id int
 	var f1, f2 string
-	for rows.Next() {
-		rows.Scan(&id, &f1, &f2)
+	for result.Rows.Next() {
+		result.Rows.Scan(&id, &f1, &f2)
 		t.Logf("%2d | f1: %s | f2: %s", id, f1, f2)
 	}
 }

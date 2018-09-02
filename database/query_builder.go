@@ -1,7 +1,7 @@
 package database
 
 import (
-	"database/sql"
+	"time"
 
 	"github.com/jaehong-hwang/simple-http/database/command"
 )
@@ -48,10 +48,20 @@ func (q *Query) OrWhere(query string, values ...interface{}) *Query {
 }
 
 // Query run func
-func (q *Query) Query(query string, args []interface{}) (*sql.Rows, error) {
+func (q *Query) Query(query string, args []interface{}) (*QueryResult, error) {
+	start := time.Now()
 	rows, err := q.connection.SQLDB.Query(query, args...)
+	elapsed := time.Since(start)
+
+	result := &QueryResult{
+		Rows:        rows,
+		QueryString: query,
+		Parameters:  args,
+		Duration:    elapsed,
+	}
+
 	if err != nil {
-		return nil,
+		return result,
 			QueryError{
 				QueryString: query,
 				Parameters:  args,
@@ -59,7 +69,7 @@ func (q *Query) Query(query string, args []interface{}) (*sql.Rows, error) {
 			}
 	}
 
-	return rows, nil
+	return result, nil
 }
 
 // CRUD Querys
@@ -67,9 +77,10 @@ func (q *Query) Query(query string, args []interface{}) (*sql.Rows, error) {
 
 // Get rows by
 // select query execute
-func (q *Query) Get() (*sql.Rows, error) {
+func (q *Query) Get() (*QueryResult, error) {
 	query, args := command.
 		NewSelect().
+		From(q.table).
 		Fields(q.selectors...).
 		Where(q.where).
 		ToString()

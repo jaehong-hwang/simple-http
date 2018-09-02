@@ -19,7 +19,7 @@ func TestConnection(t *testing.T) {
 
 	t.Log("db connected")
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(3 * time.Second)
 }
 
 type testStruct struct {
