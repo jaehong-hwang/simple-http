@@ -18,6 +18,7 @@ func TestORMGet(t *testing.T) {
 		From("orm_test").
 		Select("id", "f1", "f2").
 		Where("id = ?", 1).
+		Where("f1 = ?", "b").
 		Get()
 
 	if errQ, ok := err.(database.QueryError); ok {

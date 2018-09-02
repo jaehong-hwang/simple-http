@@ -12,7 +12,7 @@ type Query struct {
 	connection *Pool
 	table      string
 	selectors  []string
-	where      command.Where
+	where      *command.Where
 }
 
 // From table setting
@@ -32,7 +32,18 @@ func (q *Query) Select(args ...string) *Query {
 
 // Where append to model
 func (q *Query) Where(query string, values ...interface{}) *Query {
-	q.where.And(query, values...)
+	if q.where == nil {
+		q.where = &command.Where{}
+	}
+
+	q.where = q.where.And(query, values...)
+
+	return q
+}
+
+// OrWhere append to model
+func (q *Query) OrWhere(query string, values ...interface{}) *Query {
+	q.where = q.where.Or(query, values...)
 
 	return q
 }
