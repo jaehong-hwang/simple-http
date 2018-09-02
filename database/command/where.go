@@ -1,9 +1,5 @@
 package command
 
-import (
-	"github.com/jaehong-hwang/simple-http/database/scope"
-)
-
 // Where command struct
 type Where struct {
 	cond1    interface{}
@@ -51,12 +47,6 @@ func (w *Where) ToString() (string, []interface{}) {
 
 	if query != "" && w.operator != "" {
 		query += " " + w.operator + " "
-	}
-
-	if w1, ok := w.cond2.(scope.Operation); ok {
-		query1 := w1.ToString()
-
-		query += query1
 	}
 
 	if w1, ok := w.cond2.(string); ok {
