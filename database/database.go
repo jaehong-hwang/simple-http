@@ -52,6 +52,13 @@ func (p *Pool) Close() error {
 	return p.SQLDB.Close()
 }
 
+// Table func
+// query start with table name
+func (p *Pool) Table(table string) *Query {
+	query := &Query{connection: p}
+	return query.From(table)
+}
+
 // Query start
 func (p *Pool) Query() *Query {
 	return &Query{connection: p}

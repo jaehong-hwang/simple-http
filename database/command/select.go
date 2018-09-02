@@ -10,15 +10,8 @@ type Select struct {
 }
 
 // NewSelect struct return
-func NewSelect() *Select {
-	s := new(Select)
-	return s
-}
-
-// From set func
-func (s *Select) From(table string) *Select {
-	s.table = table
-	return s
+func NewSelect(table string) *Select {
+	return &Select{table: table}
 }
 
 // Fields set func

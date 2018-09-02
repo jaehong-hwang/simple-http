@@ -74,8 +74,7 @@ func (q *Query) Query(query string, args []interface{}) (*QueryResult, error) {
 // select query execute
 func (q *Query) Get() (*QueryResult, error) {
 	query, args := command.
-		NewSelect().
-		From(q.table).
+		NewSelect(q.table).
 		Fields(q.selectors...).
 		Where(q.where).
 		ToString()
@@ -84,8 +83,30 @@ func (q *Query) Get() (*QueryResult, error) {
 }
 
 // Insert to table
-func (q *Query) Insert() error {
-	return nil
+func (q *Query) Insert(rows ...map[string]interface{}) (*QueryResult, error) {
+	insert := command.NewInsert(q.table)
+
+	for i, row := range rows {
+		if i == 0 {
+			var fields []string
+			for k := range row {
+				fields = append(fields, k)
+			}
+
+			insert.SetFields(fields...)
+		}
+
+		var values []interface{}
+		for _, val := range row {
+			values = append(values, val)
+		}
+
+		insert.AddValues(values...)
+	}
+
+	query, args := insert.ToString()
+
+	return q.Query(query, args)
 }
 
 // Delete from table
