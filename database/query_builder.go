@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"strings"
 
 	"github.com/jaehong-hwang/simple-http/database/command"
 )
@@ -22,9 +21,9 @@ func (q *Query) From(table string) *Query {
 }
 
 // Select append to model
-func (q *Query) Select(args ...string) *Query {
-	for _, arg := range args {
-		q.selectors = append(q.selectors, arg)
+func (q *Query) Select(fields ...string) *Query {
+	for _, field := range fields {
+		q.selectors = append(q.selectors, field)
 	}
 
 	return q
@@ -48,34 +47,34 @@ func (q *Query) OrWhere(query string, values ...interface{}) *Query {
 	return q
 }
 
-// CRUD Querys
-// ============
-
-// Get rows by
-// select query execute
-func (q *Query) Get() (*sql.Rows, error) {
-	var args []interface{}
-	if len(q.selectors) < 1 {
-		q.selectors = append(q.selectors, "*")
-	}
-
-	where, whereArgs := q.where.ToCommand()
-
-	args = append(args, whereArgs...)
-
-	querystr := "SELECT `" + strings.Join(q.selectors, "`, `") + "` FROM `" + q.table + "` " + where
-
-	rows, err := q.connection.SQLDB.Query(querystr, args...)
+// Query run func
+func (q *Query) Query(query string, args []interface{}) (*sql.Rows, error) {
+	rows, err := q.connection.SQLDB.Query(query, args...)
 	if err != nil {
 		return nil,
 			QueryError{
-				QueryString: querystr,
+				QueryString: query,
 				Parameters:  args,
 				Message:     err.Error(),
 			}
 	}
 
 	return rows, nil
+}
+
+// CRUD Querys
+// ============
+
+// Get rows by
+// select query execute
+func (q *Query) Get() (*sql.Rows, error) {
+	query, args := command.
+		NewSelect().
+		Fields(q.selectors...).
+		Where(q.where).
+		ToString()
+
+	return q.Query(query, args)
 }
 
 // Insert to table
