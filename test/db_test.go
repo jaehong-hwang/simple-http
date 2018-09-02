@@ -2,6 +2,7 @@ package test
 
 import (
 	"testing"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -13,9 +14,12 @@ func TestConnection(t *testing.T) {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}
 
+	db.Open()
 	defer db.Close()
 
 	t.Log("db connected")
+
+	time.Sleep(10 * time.Second)
 }
 
 type testStruct struct {
@@ -29,6 +33,9 @@ func TestQuery(t *testing.T) {
 	if err != nil {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}
+
+	db.Open()
+	defer db.Close()
 
 	var f1 string
 	var f2 int

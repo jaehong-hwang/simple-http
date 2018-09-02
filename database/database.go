@@ -24,6 +24,8 @@ func NewPool(env Env, maxOpenConns, maxIdleConns int) (Pool, error) {
 		return Pool{}, err
 	}
 
+	db.Close()
+
 	return db, nil
 }
 

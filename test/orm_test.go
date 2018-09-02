@@ -14,11 +14,14 @@ func TestORMGet(t *testing.T) {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}
 
+	db.Open()
+	defer db.Close()
+
 	rows, err := db.Query().
 		From("orm_test").
 		Select("id", "f1", "f2").
 		Where("id = ?", 1).
-		Where("f1 = ?", "b").
+		OrWhere("id = ?", 2).
 		Get()
 
 	if errQ, ok := err.(database.QueryError); ok {
