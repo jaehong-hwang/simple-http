@@ -109,6 +109,16 @@ func (q *Query) Insert(rows ...map[string]interface{}) (*QueryResult, error) {
 	return q.Query(query, args)
 }
 
+// Update to table
+func (q *Query) Update(val map[string]interface{}) (*QueryResult, error) {
+	query, args := command.NewUpdate(q.table).
+		Where(q.where).
+		Set(&val).
+		ToString()
+
+	return q.Query(query, args)
+}
+
 // Delete from table
 func (q *Query) Delete() (*QueryResult, error) {
 	query, args := command.
