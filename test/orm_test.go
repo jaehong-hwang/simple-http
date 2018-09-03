@@ -16,8 +16,7 @@ func TestORMGet(t *testing.T) {
 	db.Open()
 	defer db.Close()
 
-	result, err := db.Query().
-		From("orm_test").
+	result, err := db.Table("orm_test").
 		Select("id", "f1", "f2").
 		Where("id = ?", 1).
 		OrWhere("id = ?", 2).
@@ -61,6 +60,29 @@ func TestORMInsert(t *testing.T) {
 			"f2": "test2",
 		},
 	)
+
+	t.Logf("query string: \"%s\"", result.QueryString)
+	t.Log("query parameters: ", result.Parameters)
+	t.Log("query execution time: ", result.Duration)
+
+	if err != nil {
+		t.Fatalf("query error: %s", err.Error())
+	}
+}
+
+func TestORMDelete(t *testing.T) {
+	env := GetDatabaseEnv()
+	db, err := GetDBConnect(env)
+	if err != nil {
+		t.Fatal(env.GetDataSourceName(), err.Error())
+	}
+
+	db.Open()
+	defer db.Close()
+
+	result, err := db.Table("orm_test").
+		Where("f1 LIKE ?", "test%").
+		Delete()
 
 	t.Logf("query string: \"%s\"", result.QueryString)
 	t.Log("query parameters: ", result.Parameters)

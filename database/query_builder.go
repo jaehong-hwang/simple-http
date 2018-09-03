@@ -110,6 +110,11 @@ func (q *Query) Insert(rows ...map[string]interface{}) (*QueryResult, error) {
 }
 
 // Delete from table
-func (q *Query) Delete() error {
-	return nil
+func (q *Query) Delete() (*QueryResult, error) {
+	query, args := command.
+		NewDelete(q.table).
+		Where(q.where).
+		ToString()
+
+	return q.Query(query, args)
 }
