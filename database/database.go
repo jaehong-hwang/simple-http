@@ -2,10 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 // Pool struct
@@ -86,29 +85,39 @@ func (p *Pool) Get(model interface{}, id int) error {
 		return err
 	}
 
-	cols, _ := result.Rows.Columns()
+	defer result.Rows.Close()
+
 	result.Rows.Next()
 
-	columns := make([]interface{}, len(cols))
-	columnPointers := make([]interface{}, len(cols))
-	for i := range columns {
-		columnPointers[i] = &columns[i]
-	}
-
-	if err := result.Rows.Scan(columnPointers...); err != nil {
+	types, err := result.Rows.ColumnTypes()
+	if err != nil {
 		return err
 	}
 
-	values := make(map[string]interface{})
-	for i, colName := range cols {
-		val := columnPointers[i].(*interface{})
-		values[colName] = *val
+	modelValue := reflect.ValueOf(model)
+
+	ptrs := make([]interface{}, len(types))
+	for i, tp := range types {
+		field := modelValue.Elem().FieldByName(toPascalCase(tp.Name()))
+		if !field.IsValid() {
+			return fmt.Errorf("Interface `%s` does not have the field `%s`", modelValue.Type(), tp.Name())
+		}
+
+		ptrs[i] = field.Addr().Interface()
 	}
 
-	err = mapstructure.Decode(values, model)
+	err = result.Rows.Scan(ptrs...)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func toPascalCase(str string) string {
+	if str == "id" {
+		return "ID"
+	}
+
+	return strings.ToUpper(string(str[0])) + string(str[1:])
 }

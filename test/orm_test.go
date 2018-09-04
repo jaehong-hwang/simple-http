@@ -122,7 +122,7 @@ func TestORMUpdate(t *testing.T) {
 // Board model
 type Board struct {
 	ID    int
-	Title []uint8
+	Title string
 }
 
 func TestModelGet(t *testing.T) {
@@ -132,8 +132,8 @@ func TestModelGet(t *testing.T) {
 		t.Fatal(env.GetDataSourceName(), err.Error())
 	}
 
-	board := Board{}
-	err = db.Get(&board, 1)
+	board := &Board{}
+	err = db.Get(board, 1)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
