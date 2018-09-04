@@ -2,6 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"reflect"
+	"strings"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 // Pool struct
@@ -23,8 +27,6 @@ func NewPool(env Env, maxOpenConns, maxIdleConns int) (Pool, error) {
 	if err := db.Open(); err != nil {
 		return Pool{}, err
 	}
-
-	UsePool(&db)
 
 	db.Close()
 
@@ -64,4 +66,49 @@ func (p *Pool) Table(table string) *Query {
 // Query start
 func (p *Pool) Query() *Query {
 	return &Query{connection: p}
+}
+
+// ORM Methods
+// ==============
+
+// Get by id
+func (p *Pool) Get(model interface{}, id int) error {
+	err := p.Open()
+	if err != nil {
+		return err
+	}
+
+	defer p.Close()
+
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	result, err := p.Table(names[len(names)-1]).Where("id=?", id).Get()
+	if err != nil {
+		return err
+	}
+
+	cols, _ := result.Rows.Columns()
+	result.Rows.Next()
+
+	columns := make([]interface{}, len(cols))
+	columnPointers := make([]interface{}, len(cols))
+	for i := range columns {
+		columnPointers[i] = &columns[i]
+	}
+
+	if err := result.Rows.Scan(columnPointers...); err != nil {
+		return err
+	}
+
+	values := make(map[string]interface{})
+	for i, colName := range cols {
+		val := columnPointers[i].(*interface{})
+		values[colName] = *val
+	}
+
+	err = mapstructure.Decode(values, model)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
