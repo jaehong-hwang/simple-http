@@ -133,7 +133,7 @@ func TestModelGet(t *testing.T) {
 	}
 
 	type BoardVO struct {
-		Id    int
+		ID    int
 		Title []uint8
 	}
 
@@ -145,5 +145,5 @@ func TestModelGet(t *testing.T) {
 
 	values := result.V.(*BoardVO)
 
-	t.Log(values.Id, values.Title)
+	t.Log(values.ID, values.Title)
 }
