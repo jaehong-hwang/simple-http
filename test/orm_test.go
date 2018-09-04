@@ -138,5 +138,6 @@ func TestModelGet(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	t.Fatalf("%d | %s", board.ID, board.Title)
+	t.Logf("query success")
+	t.Logf("%d | %s", board.ID, board.Title)
 }
