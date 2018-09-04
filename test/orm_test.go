@@ -4,7 +4,13 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jaehong-hwang/simple-http/database"
 )
+
+// Board model
+type Board struct {
+	*database.Model
+}
 
 func TestORMGet(t *testing.T) {
 	env := GetDatabaseEnv()
@@ -117,4 +123,27 @@ func TestORMUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("query error: %s", err.Error())
 	}
+}
+
+func TestModelGet(t *testing.T) {
+	env := GetDatabaseEnv()
+	_, err := GetDBConnect(env)
+	if err != nil {
+		t.Fatal(env.GetDataSourceName(), err.Error())
+	}
+
+	type BoardVO struct {
+		Id    int
+		Title []uint8
+	}
+
+	Board := database.NewModel("board", &BoardVO{})
+	result, err := Board.Get(1)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	values := result.V.(*BoardVO)
+
+	t.Log(values.Id, values.Title)
 }

@@ -29,8 +29,15 @@ func (s *Select) Where(w *Where) *Select {
 // ToString SELECT command
 func (s *Select) ToString() (string, []interface{}) {
 	var args []interface{}
+	var fields string
 
-	query := "SELECT `" + strings.Join(s.fields, "`, `") + "` FROM `" + s.table + "`"
+	if len(s.fields) < 1 {
+		fields = "*"
+	} else {
+		fields = "`" + strings.Join(s.fields, "`, `") + "`"
+	}
+
+	query := "SELECT " + fields + " FROM `" + s.table + "`"
 
 	if s.where != nil {
 		where, whereArgs := s.where.ToCommand()
