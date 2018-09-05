@@ -22,10 +22,6 @@ type Connection struct {
 
 // Close connection
 func (c *Connection) Close() error {
-	c.table = ""
-	c.selectors = []string{}
-	c.where = nil
-
 	return c.conn.Close()
 }
 
