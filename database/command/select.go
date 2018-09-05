@@ -7,10 +7,11 @@ import (
 
 // Select command in sql
 type Select struct {
-	table  string
-	fields []string
-	where  *Where
-	limit  []int
+	table   string
+	fields  []string
+	where   *Where
+	limit   []int
+	orderBy []*OrderBy
 }
 
 // NewSelect struct return
@@ -36,6 +37,12 @@ func (s *Select) Limit(limit ...int) *Select {
 	return s
 }
 
+// OrderBy func
+func (s *Select) OrderBy(orderBy []*OrderBy) *Select {
+	s.orderBy = orderBy
+	return s
+}
+
 // ToString SELECT command
 func (s *Select) ToString() (string, []interface{}) {
 	var args []interface{}
@@ -53,6 +60,15 @@ func (s *Select) ToString() (string, []interface{}) {
 		where, whereArgs := s.where.ToCommand()
 		args = append(args, whereArgs...)
 		query += " " + where
+	}
+
+	if len(s.orderBy) > 0 {
+		var orders []string
+		query += " ORDER BY "
+		for _, order := range s.orderBy {
+			orders = append(orders, order.Field+" "+order.Order)
+		}
+		query += strings.Join(orders, ", ")
 	}
 
 	if len(s.limit) > 0 && s.limit[0] != 0 {

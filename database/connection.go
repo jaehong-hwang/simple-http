@@ -20,6 +20,7 @@ type Connection struct {
 
 	//select fields
 	selectors []string
+	orderBy   []*command.OrderBy
 	limit     int
 	offset    int
 }
@@ -76,6 +77,12 @@ func (c *Connection) Limit(limit ...int) *Connection {
 	return c
 }
 
+// OrderBy Func
+func (c *Connection) OrderBy(field string, order string) *Connection {
+	c.orderBy = append(c.orderBy, &command.OrderBy{Field: field, Order: order})
+	return c
+}
+
 // Query run func
 func (c *Connection) Query(query string, args []interface{}) (*QueryResult, error) {
 	start := time.Now()
@@ -107,6 +114,7 @@ func (c *Connection) Get() (*QueryResult, error) {
 		Fields(c.selectors...).
 		Where(c.where).
 		Limit(c.limit, c.offset).
+		OrderBy(c.orderBy).
 		ToString()
 
 	return c.Query(query, args)
