@@ -10,7 +10,7 @@ import (
 // Server struct
 type Server struct {
 	Router router.RouteContainer
-	Env    ServerEnv
+	Env    *ServerEnv
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {

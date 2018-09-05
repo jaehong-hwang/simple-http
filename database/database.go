@@ -9,22 +9,22 @@ import (
 
 // Pool struct
 type Pool struct {
-	Env          Env
+	Env          *Env
 	MaxOpenConns int
 	MaxIdleConns int
 	SQLDB        *sql.DB
 }
 
 // NewPool func
-func NewPool(env Env, maxOpenConns, maxIdleConns int) (Pool, error) {
-	db := Pool{
+func NewPool(env *Env, maxOpenConns, maxIdleConns int) (*Pool, error) {
+	db := &Pool{
 		Env:          env,
 		MaxOpenConns: maxOpenConns,
 		MaxIdleConns: maxIdleConns,
 	}
 
 	if err := db.Open(); err != nil {
-		return Pool{}, err
+		return &Pool{}, err
 	}
 
 	db.Close()

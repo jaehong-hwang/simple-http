@@ -17,7 +17,11 @@ var port string
 var s shttp.Server
 
 func init() {
-	env := GetServerEnv()
+	env := &shttp.ServerEnv{
+		Port: 7857,
+		Test: true,
+	}
+
 	s = shttp.Server{Env: env}
 
 	url = "http://localhost:" + strconv.Itoa(env.Port)
