@@ -13,11 +13,15 @@ import (
 
 // Connection of DB Pool
 type Connection struct {
-	conn      *sql.Conn
-	context   *context.Context
-	table     string
+	conn    *sql.Conn
+	context *context.Context
+	table   string
+	where   *command.Where
+
+	//select fields
 	selectors []string
-	where     *command.Where
+	limit     int
+	offset    int
 }
 
 // Close connection
@@ -59,6 +63,19 @@ func (c *Connection) OrWhere(query string, values ...interface{}) *Connection {
 	return c
 }
 
+// Limit func
+func (c *Connection) Limit(limit ...int) *Connection {
+	if len(limit) >= 2 {
+		c.offset = limit[1]
+	}
+
+	if len(limit) >= 1 {
+		c.limit = limit[0]
+	}
+
+	return c
+}
+
 // Query run func
 func (c *Connection) Query(query string, args []interface{}) (*QueryResult, error) {
 	start := time.Now()
@@ -89,6 +106,7 @@ func (c *Connection) Get() (*QueryResult, error) {
 		NewSelect(c.table).
 		Fields(c.selectors...).
 		Where(c.where).
+		Limit(c.limit, c.offset).
 		ToString()
 
 	return c.Query(query, args)
@@ -157,6 +175,31 @@ func (c *Connection) Delete() (*QueryResult, error) {
 func (c *Connection) GetByID(model interface{}, id int) error {
 	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
 	result, err := c.Table(names[len(names)-1]).Where("id=?", id).Get()
+	if err != nil {
+		return err
+	}
+
+	defer result.Rows.Close()
+
+	ptrs, err := getModelPointers(model, result.Rows)
+	if err != nil {
+		return err
+	}
+
+	result.Rows.Next()
+
+	err = result.Rows.Scan(ptrs...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// First func
+func (c *Connection) First(model interface{}) error {
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	result, err := c.Table(names[len(names)-1]).Limit(1).Get()
 	if err != nil {
 		return err
 	}

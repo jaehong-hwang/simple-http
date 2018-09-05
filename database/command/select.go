@@ -1,12 +1,16 @@
 package command
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // Select command in sql
 type Select struct {
 	table  string
 	fields []string
 	where  *Where
+	limit  []int
 }
 
 // NewSelect struct return
@@ -23,6 +27,12 @@ func (s *Select) Fields(fields ...string) *Select {
 // Where func
 func (s *Select) Where(w *Where) *Select {
 	s.where = w
+	return s
+}
+
+// Limit func
+func (s *Select) Limit(limit ...int) *Select {
+	s.limit = limit
 	return s
 }
 
@@ -43,6 +53,14 @@ func (s *Select) ToString() (string, []interface{}) {
 		where, whereArgs := s.where.ToCommand()
 		args = append(args, whereArgs...)
 		query += " " + where
+	}
+
+	if len(s.limit) > 0 {
+		query += " LIMIT " + strconv.Itoa(s.limit[0])
+
+		if len(s.limit) > 1 {
+			query += ", " + strconv.Itoa(s.limit[1])
+		}
 	}
 
 	return query, args

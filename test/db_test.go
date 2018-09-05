@@ -215,3 +215,17 @@ func TestModelGet(t *testing.T) {
 	t.Logf("query success")
 	t.Logf("%d | %s", board.ID, board.Title)
 }
+
+func TestModelFirst(t *testing.T) {
+	con, _ := db.Open()
+	defer con.Close()
+
+	board := &Board{}
+	err := con.First(board)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	t.Logf("query success")
+	t.Logf("%d | %s", board.ID, board.Title)
+}
