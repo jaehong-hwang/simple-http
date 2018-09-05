@@ -91,6 +91,8 @@ func TestQuery(t *testing.T) {
 	}
 
 	rows, err := db.SQLDB.Query("SELECT * FROM golang_query_test")
+	defer rows.Close()
+
 	t.Log("Select result ===")
 	for rows.Next() {
 		rows.Scan(&f1, &f2)
@@ -112,6 +114,8 @@ func TestORMGet(t *testing.T) {
 		Where("id = ?", 1).
 		OrWhere("id = ?", 2).
 		Get()
+
+	defer result.Rows.Close()
 
 	t.Logf("query string: \"%s\"", result.QueryString)
 	t.Log("query parameters: ", result.Parameters)
