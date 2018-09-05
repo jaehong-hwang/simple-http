@@ -204,7 +204,27 @@ func (c *Connection) GetByID(model interface{}, id int) error {
 // First func
 func (c *Connection) First(model interface{}) error {
 	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
-	result, err := c.Table(names[len(names)-1]).Limit(1).Get()
+	result, err := c.Table(names[len(names)-1]).OrderBy("id", "ASC").Limit(1).Get()
+	if err != nil {
+		return err
+	}
+
+	defer result.Rows.Close()
+
+	result.Rows.Next()
+
+	err = scanModel(model, result.Rows)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Last func
+func (c *Connection) Last(model interface{}) error {
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	result, err := c.Table(names[len(names)-1]).OrderBy("id", "DESC").Limit(1).Get()
 	if err != nil {
 		return err
 	}
