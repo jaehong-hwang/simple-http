@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"testing"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	sdb "github.com/jaehong-hwang/simple-http/database"
@@ -32,12 +31,14 @@ func init() {
 }
 
 func TestConnection(t *testing.T) {
-	db.Open()
+	err := db.Open()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	defer db.Close()
 
 	t.Log("db connected")
-
-	time.Sleep(3 * time.Second)
 }
 
 type testStruct struct {
