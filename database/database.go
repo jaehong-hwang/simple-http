@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
+
+	"github.com/jaehong-hwang/simple-http/database/command"
 )
 
 // Pool struct
@@ -13,6 +16,10 @@ type Pool struct {
 	MaxOpenConns int
 	MaxIdleConns int
 	SQLDB        *sql.DB
+
+	table     string
+	selectors []string
+	where     *command.Where
 }
 
 // NewPool func
@@ -52,26 +59,134 @@ func (p *Pool) Open() error {
 
 // Close pool
 func (p *Pool) Close() error {
+	p.table = ""
+	p.selectors = []string{}
+	p.where = nil
+
 	return p.SQLDB.Close()
 }
 
 // Table func
 // query start with table name
-func (p *Pool) Table(table string) *Query {
-	query := &Query{connection: p}
-	return query.From(table)
+func (p *Pool) Table(table string) *Pool {
+	p.table = table
+	return p
 }
 
-// Query start
-func (p *Pool) Query() *Query {
-	return &Query{connection: p}
+// Select append to model
+func (p *Pool) Select(fields ...string) *Pool {
+	for _, field := range fields {
+		p.selectors = append(p.selectors, field)
+	}
+
+	return p
+}
+
+// Where append to model
+func (p *Pool) Where(query string, values ...interface{}) *Pool {
+	if p.where == nil {
+		p.where = &command.Where{}
+	}
+
+	p.where = p.where.And(query, values...)
+
+	return p
+}
+
+// OrWhere append to model
+func (p *Pool) OrWhere(query string, values ...interface{}) *Pool {
+	p.where = p.where.Or(query, values...)
+
+	return p
+}
+
+// Query run func
+func (p *Pool) Query(query string, args []interface{}) (*QueryResult, error) {
+	start := time.Now()
+	rows, err := p.SQLDB.Query(query, args...)
+	elapsed := time.Since(start)
+
+	result := &QueryResult{
+		Rows:        rows,
+		QueryString: query,
+		Parameters:  args,
+		Duration:    elapsed,
+	}
+
+	if err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+// CRUD Querys
+// ============
+
+// Get rows by
+// select query execute
+func (p *Pool) Get() (*QueryResult, error) {
+	query, args := command.
+		NewSelect(p.table).
+		Fields(p.selectors...).
+		Where(p.where).
+		ToString()
+
+	return p.Query(query, args)
+}
+
+// Insert to table
+func (p *Pool) Insert(rows ...map[string]interface{}) (*QueryResult, error) {
+	insert := command.NewInsert(p.table)
+
+	for i, row := range rows {
+		if i == 0 {
+			var fields []string
+			for k := range row {
+				fields = append(fields, k)
+			}
+
+			insert.SetFields(fields...)
+		}
+
+		var values []interface{}
+		for _, val := range row {
+			values = append(values, val)
+		}
+
+		insert.AddValues(values...)
+	}
+
+	query, args := insert.ToString()
+
+	return p.Query(query, args)
+}
+
+// Update to table
+func (p *Pool) Update(val map[string]interface{}) (*QueryResult, error) {
+	query, args := command.NewUpdate(p.table).
+		Where(p.where).
+		Set(&val).
+		ToString()
+
+	return p.Query(query, args)
+}
+
+// Delete from table
+func (p *Pool) Delete() (*QueryResult, error) {
+	query, args := command.
+		NewDelete(p.table).
+		Where(p.where).
+		ToString()
+
+	return p.Query(query, args)
 }
 
 // ORM Methods
 // ==============
 
-// Get by id
-func (p *Pool) Get(model interface{}, id int) error {
+// GetByID func
+func (p *Pool) GetByID(model interface{}, id int) error {
 	err := p.Open()
 	if err != nil {
 		return err

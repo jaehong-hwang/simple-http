@@ -181,7 +181,7 @@ type Board struct {
 
 func TestModelGet(t *testing.T) {
 	board := &Board{}
-	err := db.Get(board, 1)
+	err := db.GetByID(board, 1)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
