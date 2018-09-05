@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	sdb "github.com/jaehong-hwang/simple-http/database"
@@ -11,6 +12,8 @@ import (
 
 var env *sdb.Env
 var db *sdb.Pool
+
+const dbMaxConnection = 10
 
 func init() {
 	var err error
@@ -24,21 +27,40 @@ func init() {
 		Charset:  "utf8mb4",
 	}
 
-	db, err = sdb.NewPool(env, 10, 10)
+	db, err = sdb.NewPool(env, dbMaxConnection, dbMaxConnection)
 	if err != nil {
 		log.Fatal(env.GetDataSourceName(), err.Error())
 	}
 }
 
 func TestConnection(t *testing.T) {
-	err := db.Open()
+	con, err := db.Open()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer db.Close()
-
 	t.Log("db connected")
+
+	err = con.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestConnectionPool(t *testing.T) {
+	conns := make([]*sdb.Connection, dbMaxConnection)
+	var err error
+	for i := 0; i < dbMaxConnection; i++ {
+		conns[i], err = db.Open()
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		conns[i].Close()
+	}
+
+	time.Sleep(5 * time.Second)
 }
 
 type testStruct struct {
@@ -47,9 +69,6 @@ type testStruct struct {
 }
 
 func TestQuery(t *testing.T) {
-	db.Open()
-	defer db.Close()
-
 	var f1 string
 	var f2 int
 
@@ -85,10 +104,10 @@ func TestQuery(t *testing.T) {
 }
 
 func TestORMGet(t *testing.T) {
-	db.Open()
-	defer db.Close()
+	con, _ := db.Open()
+	defer con.Close()
 
-	result, err := db.Table("orm_test").
+	result, err := con.Table("orm_test").
 		Select("id", "f1", "f2").
 		Where("id = ?", 1).
 		OrWhere("id = ?", 2).
@@ -113,10 +132,10 @@ func TestORMGet(t *testing.T) {
 }
 
 func TestORMInsert(t *testing.T) {
-	db.Open()
-	defer db.Close()
+	con, _ := db.Open()
+	defer con.Close()
 
-	result, err := db.Table("orm_test").Insert(
+	result, err := con.Table("orm_test").Insert(
 		map[string]interface{}{
 			"f1": "test1",
 			"f2": "test1",
@@ -137,10 +156,10 @@ func TestORMInsert(t *testing.T) {
 }
 
 func TestORMDelete(t *testing.T) {
-	db.Open()
-	defer db.Close()
+	con, _ := db.Open()
+	defer con.Close()
 
-	result, err := db.Table("orm_test").
+	result, err := con.Table("orm_test").
 		Where("f1 LIKE ?", "test%").
 		Delete()
 
@@ -154,10 +173,10 @@ func TestORMDelete(t *testing.T) {
 }
 
 func TestORMUpdate(t *testing.T) {
-	db.Open()
-	defer db.Close()
+	con, _ := db.Open()
+	defer con.Close()
 
-	result, err := db.Table("orm_test").
+	result, err := con.Table("orm_test").
 		Where("f1 Like ?", "test%").
 		Update(map[string]interface{}{
 			"f1": "update1",
@@ -180,8 +199,11 @@ type Board struct {
 }
 
 func TestModelGet(t *testing.T) {
+	con, _ := db.Open()
+	defer con.Close()
+
 	board := &Board{}
-	err := db.GetByID(board, 1)
+	err := con.GetByID(board, 1)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
