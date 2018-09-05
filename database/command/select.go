@@ -55,10 +55,10 @@ func (s *Select) ToString() (string, []interface{}) {
 		query += " " + where
 	}
 
-	if len(s.limit) > 0 {
+	if len(s.limit) > 0 && s.limit[0] != 0 {
 		query += " LIMIT " + strconv.Itoa(s.limit[0])
 
-		if len(s.limit) > 1 {
+		if len(s.limit) > 1 && s.limit[1] != 0 {
 			query += ", " + strconv.Itoa(s.limit[1])
 		}
 	}
