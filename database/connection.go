@@ -163,24 +163,12 @@ func (c *Connection) GetByID(model interface{}, id int) error {
 
 	defer result.Rows.Close()
 
-	result.Rows.Next()
-
-	types, err := result.Rows.ColumnTypes()
+	ptrs, err := getModelPointers(model, result.Rows)
 	if err != nil {
 		return err
 	}
 
-	modelValue := reflect.ValueOf(model)
-
-	ptrs := make([]interface{}, len(types))
-	for i, tp := range types {
-		field := modelValue.Elem().FieldByName(toPascalCase(tp.Name()))
-		if !field.IsValid() {
-			return fmt.Errorf("Interface `%s` does not have the field `%s`", modelValue.Type(), tp.Name())
-		}
-
-		ptrs[i] = field.Addr().Interface()
-	}
+	result.Rows.Next()
 
 	err = result.Rows.Scan(ptrs...)
 	if err != nil {
@@ -190,6 +178,28 @@ func (c *Connection) GetByID(model interface{}, id int) error {
 	return nil
 }
 
+// get model by pointers
+func getModelPointers(model interface{}, rows *sql.Rows) ([]interface{}, error) {
+	modelValue := reflect.ValueOf(model)
+
+	types, err := rows.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+
+	ptrs := make([]interface{}, len(types))
+	for i, tp := range types {
+		field := modelValue.Elem().FieldByName(toPascalCase(tp.Name()))
+		if !field.IsValid() {
+			return nil, fmt.Errorf("Interface `%s` does not have the field `%s`", modelValue.Type(), tp.Name())
+		}
+
+		ptrs[i] = field.Addr().Interface()
+	}
+	return ptrs, nil
+}
+
+// string to pascal case
 func toPascalCase(str string) string {
 	if str == "id" {
 		return "ID"
