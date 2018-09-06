@@ -282,3 +282,18 @@ func TestModelSave(t *testing.T) {
 
 	t.Logf("query success")
 }
+
+func TestModelRemove(t *testing.T) {
+	con, _ := db.Open()
+	defer con.Close()
+
+	board := Board{}
+	con.Last(&board)
+
+	err := con.Remove(&board)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	t.Logf("query success")
+}

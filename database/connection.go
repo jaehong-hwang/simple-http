@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -306,6 +307,27 @@ func (c *Connection) Save(model interface{}) error {
 			field.SetInt(id)
 		}
 	}
+
+	if err != nil {
+		return err
+	}
+
+	return result.Rows.Close()
+}
+
+// Remove func
+func (c *Connection) Remove(model interface{}) error {
+	modelValues := reflect.Indirect(reflect.ValueOf(model))
+
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	table := names[len(names)-1]
+
+	idField := modelValues.FieldByName("ID")
+	if !idField.IsValid() {
+		return errors.New("ID undefined on model")
+	}
+
+	result, err := c.Table(table).Where("id=?", idField.Int()).Delete()
 
 	if err != nil {
 		return err
