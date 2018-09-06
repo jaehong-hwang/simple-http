@@ -241,9 +241,39 @@ func (c *Connection) Last(model interface{}) error {
 	return nil
 }
 
+// All func
+func (c *Connection) All(model interface{}) error {
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	result, err := c.Table(names[len(names)-1]).Get()
+	if err != nil {
+		return err
+	}
+
+	defer result.Rows.Close()
+
+	modelElem := reflect.ValueOf(model).Elem()
+	for result.Rows.Next() {
+		typ := reflect.TypeOf(model).Elem().Elem()
+		m := reflect.New(typ).Elem()
+		err = scanModel(m.Addr(), result.Rows)
+
+		modelElem.Set(reflect.Append(modelElem, m))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // get model by pointers
 func scanModel(model interface{}, rows *sql.Rows) error {
-	modelValue := reflect.ValueOf(model)
+	var modelValue reflect.Value
+	if mv, ok := model.(reflect.Value); ok {
+		modelValue = mv
+	} else {
+		modelValue = reflect.ValueOf(model)
+	}
 
 	types, err := rows.ColumnTypes()
 	if err != nil {

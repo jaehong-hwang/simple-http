@@ -243,3 +243,19 @@ func TestModelLast(t *testing.T) {
 	t.Logf("query success")
 	t.Logf("%d | %s", board.ID, board.Title)
 }
+
+func TestModelAll(t *testing.T) {
+	con, _ := db.Open()
+	defer con.Close()
+
+	boards := make([]Board, 0)
+	err := con.OrderBy("id", "DESC").All(&boards)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	t.Logf("query success")
+	for _, board := range boards {
+		t.Logf("%d | %s", board.ID, board.Title)
+	}
+}
