@@ -266,11 +266,59 @@ func (c *Connection) All(model interface{}) error {
 	return nil
 }
 
+// Save func
+func (c *Connection) Save(model interface{}) error {
+	var result *QueryResult
+	var err error
+
+	values := make(map[string]interface{})
+
+	modelValue := reflect.Indirect(reflect.ValueOf(model))
+	for i := 0; i < modelValue.NumField(); i++ {
+		values[modelValue.Type().Field(i).Name] = modelValue.Field(i).Interface()
+	}
+
+	names := strings.Split(reflect.ValueOf(model).Type().String(), ".")
+	table := names[len(names)-1]
+
+	if val, ok := values["ID"]; val != 0 && ok {
+		result, err = c.Table(table).Where("id=?", val).Update(values)
+	} else {
+		result, err = c.Table(table).Insert(values)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := values["ID"]; ok {
+			field := modelValue.FieldByName("ID")
+
+			result, err := c.Table(table).Select("ID").OrderBy("ID", "DESC").Get()
+			if err != nil {
+				return err
+			}
+
+			defer result.Rows.Close()
+			result.Rows.Next()
+
+			var id int64
+			result.Rows.Scan(&id)
+
+			field.SetInt(id)
+		}
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return result.Rows.Close()
+}
+
 // get model by pointers
 func scanModel(model interface{}, rows *sql.Rows) error {
 	var modelValue reflect.Value
 	if mv, ok := model.(reflect.Value); ok {
-		modelValue = mv
+		modelValue = reflect.Indirect(mv)
 	} else {
 		modelValue = reflect.ValueOf(model)
 	}

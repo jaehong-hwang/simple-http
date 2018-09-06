@@ -259,3 +259,26 @@ func TestModelAll(t *testing.T) {
 		t.Logf("%d | %s", board.ID, board.Title)
 	}
 }
+
+func TestModelSave(t *testing.T) {
+	con, _ := db.Open()
+	defer con.Close()
+
+	board1 := Board{Title: "test_save"}
+	err := con.Save(&board1)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	board2 := Board{}
+	con.Last(&board2)
+
+	board2.Title = "test_update"
+
+	err = con.Save(&board2)
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	t.Logf("query success")
+}
